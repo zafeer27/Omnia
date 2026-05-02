@@ -9,6 +9,7 @@ import Dashboard from "@/pages/Dashboard";
 import Chat from "@/pages/Chat";
 import Integrations from "@/pages/Integrations";
 import Settings from "@/pages/Settings";
+import Reports from "@/pages/Reports";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/chat" component={Chat} />
+      <Route path="/reports" component={Reports} />
       <Route path="/integrations" component={Integrations} />
       <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
