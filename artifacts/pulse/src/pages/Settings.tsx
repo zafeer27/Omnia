@@ -134,10 +134,10 @@ export default function Settings() {
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-sm font-medium">Stage</label>
-                          <select className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+                          <select defaultValue="Series A" className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
                             <option>Pre-seed</option>
                             <option>Seed</option>
-                            <option selected>Series A</option>
+                            <option>Series A</option>
                             <option>Series B+</option>
                             <option>Bootstrapped</option>
                           </select>

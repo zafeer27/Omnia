@@ -68,9 +68,11 @@ export default function Landing() {
           <span className="font-bold text-xl tracking-tight">Pulse</span>
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
-            Sign In
-          </Button>
+          <Link href="/dashboard">
+            <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+              Sign In
+            </Button>
+          </Link>
           <Link href="/onboarding">
             <Button data-testid="button-get-started-nav">Get Started</Button>
           </Link>

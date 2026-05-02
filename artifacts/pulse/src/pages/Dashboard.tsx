@@ -1,9 +1,25 @@
+import { useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
-import { AlertTriangle, TrendingUp, Users, ArrowUpRight, ArrowDownRight, RefreshCcw, Download, Sparkles } from "lucide-react";
+import { AlertTriangle, TrendingUp, Users, ArrowUpRight, ArrowDownRight, RefreshCcw, Download, Sparkles, Loader2 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
+import ReactMarkdown from "react-markdown";
+import { useCreateAnthropicConversation } from "@workspace/api-client-react";
+
+const WEEKLY_REPORT_PROMPT = `You are Pulse, an AI Chief of Staff for founders. Generate a concise Weekly Executive Summary based on:
+
+**Metrics (week ending May 2, 2026):**
+- MRR: $284K (+12.4% MoM)
+- Active Customers: 1,847 (+8.2% MoM)
+- Churn Rate: 3.2% (-0.5% MoM improvement)
+- LTV:CAC Ratio: 16.8x (+15% MoM)
+- Top acquisition: LinkedIn (38%), Organic (28%), Referrals (22%), Paid (12%)
+- At-risk: Acme Corp ($12K ARR, 45 days inactive), TechFlow ($8K ARR, usage -60%), BuildRight ($6K ARR, 3 failed payments)
+
+Format with: **Executive Summary**, **Revenue Highlights**, **Customer Health**, **Top Priorities This Week** (3 action items), **Risks to Watch**. Be specific and under 400 words.`;
 
 // Mock data for charts
 const revenueData = Array.from({ length: 30 }).map((_, i) => {
@@ -31,6 +47,49 @@ const riskCustomers = [
 ];
 
 export default function Dashboard() {
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportContent, setReportContent] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const createConversation = useCreateAnthropicConversation();
+
+  const handleGenerateReport = async () => {
+    setReportContent("");
+    setReportOpen(true);
+    setIsGenerating(true);
+    try {
+      const conv = await new Promise<{ id: number }>((resolve, reject) => {
+        createConversation.mutate({ data: { title: "Weekly Report" } }, { onSuccess: resolve, onError: reject });
+      });
+      const response = await fetch(
+        `${import.meta.env.BASE_URL}api/anthropic/conversations/${conv.id}/messages`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: WEEKLY_REPORT_PROMPT }) }
+      );
+      if (!response.body) throw new Error("No response body");
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let full = "";
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        for (const line of decoder.decode(value, { stream: true }).split("\n")) {
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.type === "content_block_delta" && data.delta?.text) {
+                full += data.delta.text;
+                setReportContent(full);
+              }
+            } catch {}
+          }
+        }
+      }
+    } catch {
+      setReportContent("Sorry, there was an error generating the report. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const kpiVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
@@ -47,8 +106,8 @@ export default function Dashboard() {
               <h1 className="text-2xl font-semibold tracking-tight">Good morning, founder</h1>
               <p className="text-muted-foreground mt-1">Here is what is happening with your business today.</p>
             </div>
-            <Button data-testid="button-generate-report" className="shadow-sm">
-              <Download className="mr-2 h-4 w-4" />
+            <Button data-testid="button-generate-report" className="shadow-sm" onClick={handleGenerateReport} disabled={isGenerating}>
+              {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
               Generate Weekly Report
             </Button>
           </div>
@@ -258,6 +317,44 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      <Dialog open={reportOpen} onOpenChange={setReportOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+          <DialogHeader className="shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center text-primary">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <DialogTitle>Weekly Executive Summary</DialogTitle>
+            </div>
+            <DialogDescription>
+              {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto mt-2 pr-1">
+            {isGenerating && reportContent === "" ? (
+              <div className="flex flex-col items-center justify-center h-40 gap-3 text-muted-foreground">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <p className="text-sm">Analyzing your metrics...</p>
+              </div>
+            ) : (
+              <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mt-4 [&_h2]:mb-2 [&_strong]:font-semibold [&_ul]:my-2 [&_li]:my-0.5">
+                <ReactMarkdown>{reportContent}</ReactMarkdown>
+                {isGenerating && <span className="inline-block h-4 w-0.5 bg-primary animate-pulse ml-0.5 align-middle" />}
+              </div>
+            )}
+          </div>
+          {!isGenerating && reportContent && (
+            <div className="shrink-0 pt-4 border-t border-border flex justify-end gap-2">
+              <Button variant="outline" size="sm" className="gap-2">
+                <Download className="h-4 w-4" />
+                Export PDF
+              </Button>
+              <Button size="sm" onClick={() => setReportOpen(false)}>Done</Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
