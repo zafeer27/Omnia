@@ -188,7 +188,9 @@ router.post("/conversations/:id/messages", async (req, res) => {
         event.delta.type === "text_delta"
       ) {
         fullResponse += event.delta.text;
-        res.write(`data: ${JSON.stringify({ content: event.delta.text })}\n\n`);
+        res.write(
+          `data: ${JSON.stringify({ type: "content_block_delta", delta: { text: event.delta.text } })}\n\n`
+        );
       }
     }
 
@@ -198,7 +200,7 @@ router.post("/conversations/:id/messages", async (req, res) => {
       content: fullResponse,
     });
 
-    res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+    res.write("data: [DONE]\n\n");
     res.end();
   } catch (err) {
     req.log.error({ err }, "Failed to send message");
