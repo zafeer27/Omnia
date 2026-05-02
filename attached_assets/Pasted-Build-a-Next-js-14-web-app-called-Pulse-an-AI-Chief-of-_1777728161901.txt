@@ -1,0 +1,66 @@
+Build a Next.js 14 web app called "Pulse" — an AI Chief of Staff for founders.
+
+TECH STACK:
+- Next.js 14 with App Router and TypeScript
+- Tailwind CSS + shadcn/ui components
+- Tremor (@tremor/react) for charts
+- Vercel AI SDK (ai package) for streaming
+- Anthropic SDK (@anthropic-ai/sdk) using Claude claude-3-5-sonnet-20241022
+- Framer Motion for animations
+- Lucide React for icons
+- Dark mode by default (slate/zinc palette with blue-500 accent)
+
+CREATE THESE 4 PAGES:
+
+1. Landing page at app/page.tsx:
+   - Dark gradient background (from-slate-950 via-slate-900 to-slate-950)
+   - Animated hero with headline: "Your AI Chief of Staff"
+   - Subhead: "Connect your business tools. Ask anything. Get answers, forecasts, and actions — in plain English."
+   - Big "Get Started Free" button linking to /onboarding
+   - 3 feature cards: "Unified Data", "Ask Anything", "Proactive Insights"
+   - Logo cloud showing brand names: Stripe, Shopify, HubSpot, Google Analytics, QuickBooks, Salesforce, Slack, Notion
+   - Premium feel like Linear or Vercel
+
+2. Onboarding page at app/onboarding/page.tsx:
+   - Title: "Connect your business tools"
+   - Grid of 15 integration cards: Stripe, Shopify, HubSpot, Salesforce, QuickBooks, Xero, Google Analytics, Meta Ads, Google Ads, Klaviyo, Mailchimp, Slack, Notion, Intercom, Mixpanel
+   - Each card has the brand name + a "Connect" button
+   - Clicking opens a fake modal: "Connecting..." with spinner for 2 seconds, then green checkmark "Connected!"
+   - "Continue to Dashboard" button at the bottom links to /dashboard
+
+3. Dashboard page at app/dashboard/page.tsx:
+   - Top navbar with "Pulse" logo (use Lucide Activity icon in a gradient blue/purple square) + user avatar
+   - Left sidebar with links: Dashboard, Chat, Reports, Integrations, Settings
+   - Main content:
+     - Big "AI Insight of the Day" card at top (warning style — orange/yellow accent)
+     - 4 KPI cards in a row: MRR ($284K, +12.4%), Customers (1,847, +8.2%), Churn Rate (3.2%, -0.5%), LTV:CAC (16.8x, +15%)
+     - Revenue line chart (last 30 days) using Tremor
+     - Customer acquisition bar chart using Tremor
+     - "Top Risks" panel listing 3 at-risk customers
+     - Prominent "Generate Weekly Report" button (top right)
+
+4. Chat page at app/chat/page.tsx:
+   - Full-screen chat UI with the same sidebar
+   - Title: "Ask Pulse anything"
+   - 4 suggested prompt buttons: "Why did revenue drop last week?", "Which customers are at churn risk?", "What should I focus on this week?", "Where should I spend more on marketing?"
+   - Chat input at the bottom
+   - Streaming Claude responses with Vercel AI SDK
+   - Message bubbles with smooth Framer Motion animations
+   - "Pulse is thinking..." indicator with pulsing dots while streaming
+
+API ROUTE at app/api/chat/route.ts:
+   - Use Anthropic SDK (NOT OpenAI)
+   - Model: claude-3-5-sonnet-20241022
+   - Stream responses back to the client
+   - Use a system prompt that includes business context (I will provide the data file separately)
+   - Import context from /lib/mockData.ts using the getBusinessContext() function
+
+DESIGN PRINCIPLES:
+- Dark mode by default
+- Slate-900/950 backgrounds with blue-500 accents
+- Rounded-xl corners everywhere
+- Framer Motion fade-in and stagger animations on page load
+- Premium SaaS feel — think Linear, Vercel, Cal.com
+- Mobile responsive
+
+Set up the project, install all dependencies, and create all files. I will provide the mock data file in the next message.
