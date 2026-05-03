@@ -16,7 +16,7 @@ const CUSTOMERS: Customer[] = [
   { id: 3, name: "Meridian Labs", arr: 15600, health: "healthy", score: 82, lastActive: "2d ago", since: "Jun 2025", seats: 60, trend: "flat", note: "Consistent usage, renewal due in 60 days" },
   { id: 4, name: "Vertex Systems", arr: 12000, health: "healthy", score: 78, lastActive: "3d ago", since: "Aug 2025", seats: 45, trend: "flat", note: "Engaged with new features, support tickets resolved" },
   { id: 5, name: "SkyBridge Co", arr: 9600, health: "healthy", score: 71, lastActive: "5d ago", since: "Sep 2025", seats: 32, trend: "down", note: "Usage slightly down, check-in scheduled" },
-  { id: 6, name: "Acme Corp", arr: 12000, health: "at-risk", score: 38, lastActive: "45d ago", since: "Feb 2025", seats: 42, trend: "down", note: "No logins in 45 days. Champion contact left company." },
+  { id: 6, name: "Pinnacle Corp", arr: 12000, health: "at-risk", score: 38, lastActive: "45d ago", since: "Feb 2025", seats: 42, trend: "down", note: "No logins in 45 days. Champion contact left company." },
   { id: 7, name: "TechFlow", arr: 8000, health: "at-risk", score: 29, lastActive: "18d ago", since: "Apr 2025", seats: 28, trend: "down", note: "Usage dropped 60% over 2 weeks. No response to outreach." },
   { id: 8, name: "BuildRight", arr: 6000, health: "at-risk", score: 22, lastActive: "12d ago", since: "May 2025", seats: 20, trend: "down", note: "3 failed payments. Account owner unreachable." },
   { id: 9, name: "Bluewave Ltd", arr: 5200, health: "churned", score: 0, lastActive: "62d ago", since: "Nov 2024", seats: 0, trend: "down", note: "Cancelled — migrated to competitor (MetricHQ)" },
@@ -30,7 +30,7 @@ const HEALTH_CONFIG: Record<Health, { label: string; icon: React.ElementType; co
 };
 
 const AI_PROMPT = `You are Pulse. The following accounts are at risk of churning for TechScale Inc:
-1. Acme Corp – $12K ARR, 45 days inactive, champion contact left
+1. Pinnacle Corp – $12K ARR, 45 days inactive, champion contact left
 2. TechFlow – $8K ARR, usage -60% over 14 days, not responding
 3. BuildRight – $6K ARR, 3 failed payments, account owner unreachable
 Total at risk: $26K ARR

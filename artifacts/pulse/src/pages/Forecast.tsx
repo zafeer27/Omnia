@@ -1,47 +1,18 @@
 import AppLayout from "@/components/AppLayout";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { TrendingUp, ArrowUpRight } from "lucide-react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { ArrowUpRight } from "lucide-react";
 
 type Scenario = "bear" | "base" | "bull";
 
-const ACTUALS = [
-  { month: "Oct", mrr: 166 }, { month: "Nov", mrr: 182 }, { month: "Dec", mrr: 195 },
-  { month: "Jan", mrr: 210 }, { month: "Feb", mrr: 229 }, { month: "Mar", mrr: 252 },
-  { month: "Apr", mrr: 284 },
-];
-
-const PROJECTIONS: Record<Scenario, { month: string; bear: number | null; base: number | null; bull: number | null }[]> = {
-  bear: [
-    { month: "Apr", bear: 284, base: null, bull: null },
-    { month: "May", bear: 298, base: null, bull: null },
-    { month: "Jun", bear: 309, base: null, bull: null },
-    { month: "Jul", bear: 317, base: null, bull: null },
-    { month: "Aug", bear: 323, base: null, bull: null },
-    { month: "Sep", bear: 329, base: null, bull: null },
-  ],
-  base: [
-    { month: "Apr", bear: null, base: 284, bull: null },
-    { month: "May", bear: null, base: 312, bull: null },
-    { month: "Jun", bear: null, base: 343, bull: null },
-    { month: "Jul", bear: null, base: 378, bull: null },
-    { month: "Aug", bear: null, base: 416, bull: null },
-    { month: "Sep", bear: null, base: 457, bull: null },
-  ],
-  bull: [
-    { month: "Apr", bear: null, base: null, bull: 284 },
-    { month: "May", bear: null, base: null, bull: 330 },
-    { month: "Jun", bear: null, base: null, bull: 384 },
-    { month: "Jul", bear: null, base: null, bull: 447 },
-    { month: "Aug", bear: null, base: null, bull: 520 },
-    { month: "Sep", bear: null, base: null, bull: 604 },
-  ],
-};
-
 const COMBINED = [
-  { month: "Oct", actual: 166 }, { month: "Nov", actual: 182 }, { month: "Dec", actual: 195 },
-  { month: "Jan", actual: 210 }, { month: "Feb", actual: 229 }, { month: "Mar", actual: 252 },
+  { month: "Oct", actual: 166 },
+  { month: "Nov", actual: 182 },
+  { month: "Dec", actual: 195 },
+  { month: "Jan", actual: 210 },
+  { month: "Feb", actual: 229 },
+  { month: "Mar", actual: 252 },
   { month: "Apr", actual: 284, bear: 284, base: 284, bull: 284 },
   { month: "May", bear: 298, base: 312, bull: 330 },
   { month: "Jun", bear: 309, base: 343, bull: 384 },
@@ -65,8 +36,6 @@ const SCENARIO_CONFIG: Record<Scenario, { label: string; desc: string; color: st
   },
 };
 
-function fmt(v: number) { return `$${v}K`; }
-
 export default function Forecast() {
   const [scenario, setScenario] = useState<Scenario>("base");
   const cfg = SCENARIO_CONFIG[scenario];
@@ -77,7 +46,7 @@ export default function Forecast() {
         <div className="max-w-5xl mx-auto space-y-6">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Revenue Forecast</h1>
-            <p className="text-muted-foreground mt-1">AI-powered MRR projections through September 2026</p>
+            <p className="text-muted-foreground mt-1">MRR projections through September 2026 across three scenarios</p>
           </div>
 
           {/* Scenario toggle */}
@@ -85,8 +54,13 @@ export default function Forecast() {
             {(["bear", "base", "bull"] as Scenario[]).map((s) => {
               const c = SCENARIO_CONFIG[s];
               return (
-                <button key={s} onClick={() => setScenario(s)}
-                  className={`flex-1 p-4 rounded-xl border transition-all text-left ${scenario === s ? "border-primary/50 bg-primary/5" : "border-border bg-card hover:bg-muted/20"}`}>
+                <button
+                  key={s}
+                  onClick={() => setScenario(s)}
+                  className={`flex-1 p-4 rounded-xl border transition-all text-left ${
+                    scenario === s ? "border-primary/50 bg-primary/5" : "border-border bg-card hover:bg-muted/20"
+                  }`}
+                >
                   <div className="flex items-center gap-2 mb-1">
                     <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: c.color }} />
                     <span className="font-semibold text-sm">{c.label}</span>
@@ -100,12 +74,19 @@ export default function Forecast() {
           </div>
 
           {/* Chart */}
-          <motion.div key={scenario} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border bg-card p-5">
+          <motion.div
+            key={scenario}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-xl border bg-card p-5"
+          >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-sm font-semibold">MRR Projection — All Scenarios</h3>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <div className="w-8 h-0.5 bg-primary rounded" />Actuals
-                <div className="w-8 h-0.5 bg-red-400 rounded border-dashed" style={{ borderTop: "2px dashed #f87171", height: 0 }} />Bear
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5"><span className="inline-block w-6 h-0.5 bg-indigo-500 rounded" />Actuals</span>
+                <span className="flex items-center gap-1.5"><span className="inline-block w-6 border-t-2 border-dashed border-green-500" />Bull</span>
+                <span className="flex items-center gap-1.5"><span className="inline-block w-6 border-t-2 border-dashed border-blue-500" />Base</span>
+                <span className="flex items-center gap-1.5"><span className="inline-block w-6 border-t-2 border-dashed border-red-400" />Bear</span>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={320}>
@@ -131,7 +112,10 @@ export default function Forecast() {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="month" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                 <YAxis tickFormatter={(v) => `$${v}K`} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                <Tooltip formatter={(v: number) => [`$${v}K`, ""]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
+                <Tooltip
+                  formatter={(v: number) => [`$${v}K`, ""]}
+                  contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                />
                 <Area type="monotone" dataKey="actual" stroke="#6366f1" strokeWidth={2.5} fill="url(#colorActual)" name="Actuals" connectNulls />
                 <Area type="monotone" dataKey="base" stroke="#3b82f6" strokeWidth={2} strokeDasharray="6 3" fill="url(#colorBase)" name="Base" connectNulls />
                 <Area type="monotone" dataKey="bull" stroke="#22c55e" strokeWidth={2} strokeDasharray="6 3" fill="url(#colorBull)" name="Bull" connectNulls />

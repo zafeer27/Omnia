@@ -2,11 +2,19 @@ import { useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { motion } from "framer-motion";
-import { Target, Plus, ChevronDown, ChevronRight, TrendingUp, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus, ChevronDown, ChevronRight, TrendingUp, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 
 type Status = "on-track" | "at-risk" | "off-track" | "achieved";
-type KeyResult = { id: string; title: string; current: number; target: number; unit: string; status: Status };
+type KeyResult = {
+  id: string;
+  title: string;
+  current: number;
+  target: number;
+  unit: string;
+  status: Status;
+  progressPct?: number;
+};
 type Objective = { id: string; title: string; owner: string; quarter: string; status: Status; keyResults: KeyResult[] };
 
 const OBJECTIVES: Objective[] = [
@@ -14,7 +22,7 @@ const OBJECTIVES: Objective[] = [
     id: "o1", title: "Reach $300K MRR", owner: "CEO", quarter: "Q2 2026", status: "on-track",
     keyResults: [
       { id: "kr1", title: "Grow MRR from $284K to $300K", current: 284, target: 300, unit: "K MRR", status: "on-track" },
-      { id: "kr2", title: "Reduce churn to below 2.5%", current: 3.2, target: 2.5, unit: "% churn", status: "at-risk" },
+      { id: "kr2", title: "Reduce churn to below 2.5%", current: 0.5, target: 1.2, unit: "pp reduced", status: "at-risk", progressPct: 42 },
       { id: "kr3", title: "Add 200 net new customers", current: 147, target: 200, unit: "customers", status: "on-track" },
     ],
   },
@@ -22,8 +30,8 @@ const OBJECTIVES: Objective[] = [
     id: "o2", title: "Scale GTM to drive $1M ARR pipeline", owner: "VP Sales", quarter: "Q2 2026", status: "at-risk",
     keyResults: [
       { id: "kr4", title: "Close 15 new enterprise deals", current: 6, target: 15, unit: "deals", status: "at-risk" },
-      { id: "kr5", title: "Reduce sales cycle from 45 to 30 days", current: 38, target: 30, unit: "days avg", status: "on-track" },
-      { id: "kr6", title: "Hire 2 AEs", current: 1, target: 2, unit: "AEs hired", status: "on-track" },
+      { id: "kr5", title: "Reduce sales cycle 45→30 days", current: 7, target: 15, unit: "days saved", status: "on-track", progressPct: 47 },
+      { id: "kr6", title: "Hire 2 Account Executives", current: 1, target: 2, unit: "AEs hired", status: "on-track" },
     ],
   },
   {
@@ -51,22 +59,36 @@ const STATUS_CONFIG: Record<Status, { label: string; color: string; badge: strin
   "achieved": { label: "Achieved", color: "bg-primary", badge: "bg-primary/10 text-primary border-primary/20", icon: CheckCircle },
 };
 
-function ProgressBar({ current, target, status, unit }: { current: number; target: number; status: Status; unit: string }) {
-  const pct = Math.min((current / target) * 100, 100);
-  const color = status === "achieved" ? "bg-primary" : status === "on-track" ? "bg-green-500" : status === "at-risk" ? "bg-yellow-500" : "bg-red-500";
+function ProgressBar({ kr }: { kr: KeyResult }) {
+  const pct = kr.progressPct !== undefined
+    ? kr.progressPct
+    : Math.min((kr.current / kr.target) * 100, 100);
+  const color =
+    kr.status === "achieved" ? "bg-primary"
+    : kr.status === "on-track" ? "bg-green-500"
+    : kr.status === "at-risk" ? "bg-yellow-500"
+    : "bg-red-500";
   return (
     <div className="flex items-center gap-3 flex-1">
       <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-        <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.7, ease: "easeOut" }} className={`h-full rounded-full ${color}`} />
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.7, ease: "easeOut" }}
+          className={`h-full rounded-full ${color}`}
+        />
       </div>
-      <span className="text-xs text-muted-foreground whitespace-nowrap">{current}/{target} {unit}</span>
+      <span className="text-xs text-muted-foreground whitespace-nowrap">
+        {kr.current}/{kr.target} {kr.unit}
+      </span>
     </div>
   );
 }
 
 export default function Goals() {
   const [expanded, setExpanded] = useState<string[]>(["o1"]);
-  const toggle = (id: string) => setExpanded((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  const toggle = (id: string) =>
+    setExpanded((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
 
   const onTrack = OBJECTIVES.filter((o) => o.status === "on-track").length;
   const atRisk = OBJECTIVES.filter((o) => o.status === "at-risk").length;
@@ -103,10 +125,17 @@ export default function Goals() {
             {OBJECTIVES.map((obj) => {
               const cfg = STATUS_CONFIG[obj.status];
               const isOpen = expanded.includes(obj.id);
-              const krProgress = Math.round((obj.keyResults.filter((kr) => kr.status === "achieved").length / obj.keyResults.length) * 100);
+              const onTrackKRs = obj.keyResults.filter(
+                (kr) => kr.status === "on-track" || kr.status === "achieved"
+              ).length;
+              const totalKRs = obj.keyResults.length;
+
               return (
                 <div key={obj.id} className="rounded-xl border bg-card overflow-hidden">
-                  <button className="w-full p-5 flex items-center gap-4 text-left hover:bg-muted/20 transition-colors" onClick={() => toggle(obj.id)}>
+                  <button
+                    className="w-full p-5 flex items-center gap-4 text-left hover:bg-muted/20 transition-colors"
+                    onClick={() => toggle(obj.id)}
+                  >
                     <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${cfg.color}`} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -116,27 +145,39 @@ export default function Goals() {
                       <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                         <span>{obj.quarter}</span>
                         <span>Owner: {obj.owner}</span>
-                        <span>{krProgress}% of KRs complete</span>
+                        <span>{onTrackKRs}/{totalKRs} KRs on track</span>
                       </div>
                     </div>
-                    {isOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
+                    {isOpen
+                      ? <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                      : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
                   </button>
 
-                  {isOpen && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                      className="border-t border-border px-5 pb-4 space-y-3 pt-3">
-                      {obj.keyResults.map((kr) => {
-                        const krc = STATUS_CONFIG[kr.status];
-                        return (
-                          <div key={kr.id} className="flex items-center gap-3">
-                            <krc.icon className={`h-4 w-4 shrink-0 ${krc.badge.split(" ")[1]}`} />
-                            <span className="text-sm w-56 shrink-0 truncate">{kr.title}</span>
-                            <ProgressBar current={kr.current} target={kr.target} status={kr.status} unit={kr.unit} />
-                          </div>
-                        );
-                      })}
-                    </motion.div>
-                  )}
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        key={`${obj.id}-krs`}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.25, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                      >
+                        <div className="border-t border-border px-5 pb-4 space-y-3 pt-3">
+                          {obj.keyResults.map((kr) => {
+                            const krc = STATUS_CONFIG[kr.status];
+                            return (
+                              <div key={kr.id} className="flex items-center gap-3">
+                                <krc.icon className={`h-4 w-4 shrink-0 ${krc.badge.split(" ")[1]}`} />
+                                <span className="text-sm w-56 shrink-0 truncate">{kr.title}</span>
+                                <ProgressBar kr={kr} />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             })}
