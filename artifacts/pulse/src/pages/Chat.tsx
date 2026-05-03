@@ -134,31 +134,51 @@ export default function Chat() {
           <div className="max-w-4xl mx-auto w-full space-y-6">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-[50vh] text-center space-y-8">
-                <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                  <Activity className="h-8 w-8 text-primary" />
+                {/* Icon with glow */}
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-2xl blur-xl opacity-40"
+                    style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)", transform: "scale(1.4)" }} />
+                  <div className="relative h-16 w-16 rounded-2xl flex items-center justify-center border border-primary/20"
+                    style={{ background: "linear-gradient(135deg, hsl(var(--primary)/0.15), hsl(var(--primary)/0.05))" }}>
+                    <Activity className="h-8 w-8 text-primary" />
+                  </div>
                 </div>
+
                 <div className="space-y-2">
                   <h3 className="text-xl font-semibold">How can I help you today?</h3>
-                  <p className="text-muted-foreground text-sm max-w-md mx-auto">
-                    I can analyze your data, draft communications, or help you make strategic decisions.
+                  <p className="text-sm max-w-md mx-auto" style={{ color: "hsl(var(--muted-foreground))" }}>
+                    Analyze data, draft communications, or make strategic decisions — just ask.
                   </p>
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl">
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 w-full max-w-2xl">
                   {SUGGESTED_PROMPTS.map((prompt, i) => (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.1 }}
+                      transition={{ delay: i * 0.08 }}
                       key={prompt}
                     >
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start h-auto py-3 px-4 text-left font-normal bg-card hover:bg-muted/50 border-border shadow-sm text-sm"
+                      <button
+                        className="w-full text-left px-4 py-3 rounded-xl border text-sm font-medium transition-all group"
+                        style={{
+                          background: "hsl(var(--card))",
+                          borderColor: "hsl(var(--border))",
+                          color: "hsl(var(--foreground))",
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLButtonElement).style.borderColor = "hsl(var(--primary)/0.4)";
+                          (e.currentTarget as HTMLButtonElement).style.background = "hsl(var(--primary)/0.05)";
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLButtonElement).style.borderColor = "hsl(var(--border))";
+                          (e.currentTarget as HTMLButtonElement).style.background = "hsl(var(--card))";
+                        }}
                         onClick={() => handleSend(prompt)}
                       >
+                        <span className="text-primary mr-2 text-xs">→</span>
                         {prompt}
-                      </Button>
+                      </button>
                     </motion.div>
                   ))}
                 </div>

@@ -150,7 +150,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: "radial-gradient(ellipse 80% 50% at 70% -10%, hsl(var(--primary)/0.05) 0%, transparent 60%)"
+        }} />
         {children}
       </div>
     </div>
