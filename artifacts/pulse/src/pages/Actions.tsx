@@ -119,13 +119,7 @@ export default function Actions() {
                 const Icon = cfg.icon;
                 return (
                   <motion.div key={task.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                    className={`flex gap-4 p-4 rounded-xl border bg-card transition-all hover:border-border/80 ${task.done ? "opacity-50" : ""}`}
-                    style={{ borderLeft: `3px solid ${
-                      task.priority === "critical" ? "rgb(248,113,113)" :
-                      task.priority === "high" ? "rgb(251,146,60)" :
-                      task.priority === "medium" ? "rgb(250,204,21)" :
-                      "hsl(var(--border))"
-                    }` }}>
+                    className={`flex gap-4 p-4 rounded-xl border bg-card transition-all hover:border-primary/20 ${task.done ? "opacity-40" : ""}`}>
                     <button onClick={() => toggle(task.id)} className="mt-0.5 shrink-0">
                       {task.done ? <CheckCircle className="h-5 w-5 text-primary" /> : <Circle className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />}
                     </button>
