@@ -121,7 +121,7 @@ export default function Chat() {
         {/* Chat Header */}
         <div className="border-b border-border p-4 px-6 flex items-center justify-between bg-card/50 backdrop-blur-sm z-10 shrink-0">
           <div>
-            <h2 className="font-semibold tracking-tight">Ask Pulse anything</h2>
+            <h2 className="font-semibold tracking-tight">Ask Omnia anything</h2>
             <p className="text-xs text-muted-foreground">Your AI Chief of Staff</p>
           </div>
           <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-sm">
@@ -233,7 +233,7 @@ export default function Chat() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={isStreaming ? "Pulse is thinking..." : "Ask anything about your business..."}
+              placeholder={isStreaming ? "Omnia is thinking..." : "Ask anything about your business..."}
               className="pr-12 py-6 rounded-xl bg-card border-border shadow-sm focus-visible:ring-primary/50 text-base"
               disabled={isStreaming || !conversationId}
             />
@@ -248,7 +248,7 @@ export default function Chat() {
             </Button>
           </div>
           <div className="text-center mt-2">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Pulse AI can make mistakes. Verify important information.</span>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Omnia AI can make mistakes. Verify important information.</span>
           </div>
         </div>
       </div>

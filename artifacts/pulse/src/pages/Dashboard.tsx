@@ -8,7 +8,7 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "rec
 import ReactMarkdown from "react-markdown";
 import { useCreateAnthropicConversation } from "@workspace/api-client-react";
 
-const WEEKLY_REPORT_PROMPT = `You are Pulse, an AI Chief of Staff for founders. Generate a concise Weekly Executive Summary based on:
+const WEEKLY_REPORT_PROMPT = `You are Omnia, an AI Chief of Staff for founders. Generate a concise Weekly Executive Summary based on:
 
 **Metrics (week ending May 2, 2026):**
 - MRR: $284K (+12.4% MoM)

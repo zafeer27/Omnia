@@ -47,7 +47,7 @@ const INITIAL_REPORTS: SavedReport[] = [
   { title: "Marketing ROI Breakdown", date: "Apr 10, 2026", type: "Custom", icon: BarChart2 },
 ];
 
-const WEEKLY_REPORT_PROMPT = `You are Pulse, an AI Chief of Staff for founders. Generate a concise, insightful Weekly Executive Summary report for a B2B SaaS founder based on the following business metrics:
+const WEEKLY_REPORT_PROMPT = `You are Omnia, an AI Chief of Staff for founders. Generate a concise, insightful Weekly Executive Summary report for a B2B SaaS founder based on the following business metrics:
 
 **Current metrics (week ending May 2, 2026):**
 - MRR: $284K (+12.4% MoM)

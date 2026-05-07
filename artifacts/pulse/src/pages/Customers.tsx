@@ -29,7 +29,7 @@ const HEALTH_CONFIG: Record<Health, { label: string; icon: React.ElementType; co
   churned: { label: "Churned", icon: UserX, color: "text-muted-foreground", badge: "bg-muted text-muted-foreground border-border", bg: "bg-muted-foreground" },
 };
 
-const AI_PROMPT = `You are Pulse. The following accounts are at risk of churning for TechScale Inc:
+const AI_PROMPT = `You are Omnia. The following accounts are at risk of churning for TechScale Inc:
 1. Pinnacle Corp – $12K ARR, 45 days inactive, champion contact left
 2. TechFlow – $8K ARR, usage -60% over 14 days, not responding
 3. BuildRight – $6K ARR, 3 failed payments, account owner unreachable

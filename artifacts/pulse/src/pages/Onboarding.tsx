@@ -90,7 +90,7 @@ export default function Onboarding() {
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold tracking-tight">Connect your business tools</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Select the tools you use to run your business. Pulse will unify your data to provide proactive insights.
+            Select the tools you use to run your business. Omnia will unify your data to provide proactive insights.
           </p>
         </div>
 
@@ -160,7 +160,7 @@ export default function Onboarding() {
             </DialogTitle>
             <DialogDescription className="text-center">
               {connectSuccess 
-                ? `${connecting?.name} has been successfully connected to Pulse.` 
+                ? `${connecting?.name} has been successfully connected to Omnia.` 
                 : "Please wait while we establish a secure connection."}
             </DialogDescription>
           </DialogHeader>

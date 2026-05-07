@@ -16,7 +16,7 @@ const PAST_UPDATES: Update[] = [
   { id: 4, period: "Q1 2026 Summary", date: "Apr 5, 2026", mrr: "$252K", growth: "+32% QoQ", status: "sent" },
 ];
 
-const AI_PROMPT = `You are Pulse, drafting a monthly investor update email for TechScale Inc (SaaS, Series A).
+const AI_PROMPT = `You are Omnia, drafting a monthly investor update email for TechScale Inc (SaaS, Series A).
 
 Business context this month:
 - MRR: $284,000 (+12.4% MoM, +72% YoY)

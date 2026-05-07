@@ -61,7 +61,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-indigo-500 via-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
             <Activity className="text-white h-3.5 w-3.5" />
           </div>
-          <span className="font-semibold text-sm tracking-tight text-foreground">Pulse</span>
+          <span className="font-semibold text-sm tracking-tight text-foreground">Omnia</span>
           <span className="ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-primary/15 text-primary">AI</span>
         </div>
 

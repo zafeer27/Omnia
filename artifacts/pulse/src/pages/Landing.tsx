@@ -42,7 +42,7 @@ export default function Landing() {
     },
     {
       title: "Proactive Insights",
-      description: "Pulse tells you what matters before you ask. Churn risks, revenue drops, and more.",
+      description: "Omnia tells you what matters before you ask. Churn risks, revenue drops, and more.",
       icon: Sparkles,
     },
   ];
@@ -65,7 +65,7 @@ export default function Landing() {
           <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
             <Activity className="text-white h-5 w-5" />
           </div>
-          <span className="font-bold text-xl tracking-tight">Pulse</span>
+          <span className="font-bold text-xl tracking-tight">Omnia</span>
         </div>
         <div className="flex items-center gap-4">
           <Link href="/dashboard">

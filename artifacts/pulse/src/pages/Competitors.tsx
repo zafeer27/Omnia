@@ -68,7 +68,7 @@ export default function Competitors() {
         <div className="max-w-6xl mx-auto space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Competitor Pulse</h1>
+              <h1 className="text-2xl font-semibold tracking-tight">Competitor Omnia</h1>
               <p className="text-muted-foreground mt-1">Track market movements, pricing, and product changes</p>
             </div>
             <Button variant="outline" className="gap-2"><Plus className="h-4 w-4" />Track competitor</Button>
@@ -144,7 +144,7 @@ export default function Competitors() {
                   <h3 className="text-sm font-semibold mb-3">Price Position</h3>
                   <div className="space-y-2.5">
                     <div>
-                      <div className="flex justify-between text-xs mb-1"><span className="text-muted-foreground">Pulse (us)</span><span className="font-medium">{comp.ourPrice}</span></div>
+                      <div className="flex justify-between text-xs mb-1"><span className="text-muted-foreground">Omnia (us)</span><span className="font-medium">{comp.ourPrice}</span></div>
                       <div className="h-2 rounded-full bg-muted overflow-hidden"><div className="h-full bg-primary rounded-full" style={{ width: "50%" }} /></div>
                     </div>
                     <div>

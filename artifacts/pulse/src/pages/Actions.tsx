@@ -27,7 +27,7 @@ const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; icon: Re
   low: { label: "Low", color: "bg-slate-500/10 text-slate-400 border-slate-500/20", icon: Circle },
 };
 
-const AI_PROMPT = `You are Pulse, an AI Chief of Staff. Based on these business metrics for TechScale Inc:
+const AI_PROMPT = `You are Omnia, an AI Chief of Staff. Based on these business metrics for TechScale Inc:
 - MRR: $284K (+12.4% MoM), Churn: 3.2%, 3 at-risk accounts totaling $26K ARR
 - CAC rising in paid channels, engineering at capacity, board meeting next week
 

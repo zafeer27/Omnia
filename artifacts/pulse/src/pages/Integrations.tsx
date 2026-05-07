@@ -42,7 +42,7 @@ const integrations: Integration[] = [
   { id: "googleads", name: "Google Ads", category: "Marketing", icon: SiGoogleads, description: "Search and display ad spend and ROI" },
   { id: "klaviyo", name: "Klaviyo", category: "Marketing", icon: SiMailchimp, description: "Email marketing flows and revenue" },
   { id: "mailchimp", name: "Mailchimp", category: "Marketing", icon: SiMailchimp, description: "Email campaigns and audience data" },
-  { id: "slack", name: "Slack", category: "Productivity", icon: SiSlack, description: "Team alerts and Pulse notifications" },
+  { id: "slack", name: "Slack", category: "Productivity", icon: SiSlack, description: "Team alerts and Omnia notifications" },
   { id: "notion", name: "Notion", category: "Productivity", icon: SiNotion, description: "Sync reports to your workspace" },
   { id: "intercom", name: "Intercom", category: "Support", icon: SiIntercom, description: "Customer conversations and CSAT" },
   { id: "mixpanel", name: "Mixpanel", category: "Analytics", icon: SiMixpanel, description: "Product usage and retention metrics" },
@@ -168,7 +168,7 @@ export default function Integrations() {
             </DialogTitle>
             <DialogDescription className="text-center">
               {connectSuccess
-                ? `${connecting?.name} has been successfully connected to Pulse.`
+                ? `${connecting?.name} has been successfully connected to Omnia.`
                 : "Please wait while we establish a secure connection."}
             </DialogDescription>
           </DialogHeader>

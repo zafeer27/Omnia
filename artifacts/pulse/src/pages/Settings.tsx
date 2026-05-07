@@ -18,7 +18,7 @@ const notificationOptions = [
   { id: "weekly_report", label: "Weekly digest", description: "Summary of your key metrics every Monday" },
   { id: "anomaly", label: "Anomaly alerts", description: "When a metric moves more than 20% in 24 hours" },
   { id: "churn_risk", label: "Churn risk alerts", description: "When a customer shows signs of churning" },
-  { id: "ai_insights", label: "AI insights", description: "Proactive recommendations from Pulse" },
+  { id: "ai_insights", label: "AI insights", description: "Proactive recommendations from Omnia" },
 ];
 
 export default function Settings() {
@@ -150,7 +150,7 @@ export default function Settings() {
                           rows={3}
                           defaultValue="B2B SaaS platform helping teams collaborate. Current focus is expanding into enterprise."
                         />
-                        <p className="text-xs text-muted-foreground">This helps Pulse give you more relevant insights.</p>
+                        <p className="text-xs text-muted-foreground">This helps Omnia give you more relevant insights.</p>
                       </div>
                       <div className="pt-2 flex justify-end">
                         <Button onClick={handleSave} className="gap-2">
@@ -167,7 +167,7 @@ export default function Settings() {
                   <Card>
                     <CardHeader>
                       <CardTitle>Notifications</CardTitle>
-                      <CardDescription>Choose what Pulse notifies you about</CardDescription>
+                      <CardDescription>Choose what Omnia notifies you about</CardDescription>
                     </CardHeader>
                     <CardContent className="divide-y divide-border">
                       {notificationOptions.map((opt) => (
@@ -196,7 +196,7 @@ export default function Settings() {
                   <Card>
                     <CardHeader>
                       <CardTitle>Appearance</CardTitle>
-                      <CardDescription>Customize how Pulse looks</CardDescription>
+                      <CardDescription>Customize how Omnia looks</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm font-medium mb-3">Theme</p>

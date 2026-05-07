@@ -58,7 +58,7 @@ export default function Login() {
           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
             <Zap className="h-5 w-5 text-white" />
           </div>
-          <span className="text-white font-bold text-xl tracking-tight">Pulse</span>
+          <span className="text-white font-bold text-xl tracking-tight">Omnia</span>
         </div>
 
         {/* Hero text */}
@@ -80,7 +80,7 @@ export default function Login() {
               </span>
             </h1>
             <p className="text-slate-400 text-lg leading-relaxed max-w-md">
-              Pulse connects to your tools, analyzes your metrics, and tells you
+              Omnia connects to your tools, analyzes your metrics, and tells you
               exactly what to focus on — before you even ask.
             </p>
           </motion.div>
@@ -112,7 +112,7 @@ export default function Login() {
             className="p-5 rounded-2xl bg-white/[0.04] border border-white/[0.07] backdrop-blur-sm space-y-3"
           >
             <p className="text-slate-300 text-sm leading-relaxed italic">
-              "Pulse replaced three weekly reporting calls. I open it every morning
+              "Omnia replaced three weekly reporting calls. I open it every morning
               and I know exactly what's on fire and what's working."
             </p>
             <div className="flex items-center gap-3">
@@ -191,7 +191,7 @@ export default function Login() {
                 <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                   <Zap className="h-4 w-4 text-white" />
                 </div>
-                <span className="text-white font-bold text-lg">Pulse</span>
+                <span className="text-white font-bold text-lg">Omnia</span>
               </div>
 
               {/* Header */}
@@ -291,7 +291,7 @@ export default function Login() {
                   type="submit"
                   className="w-full h-11 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-200 text-sm tracking-wide"
                 >
-                  Sign In to Pulse
+                  Sign In to Omnia
                 </Button>
               </form>
 
