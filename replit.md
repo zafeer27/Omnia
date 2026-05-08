@@ -44,10 +44,22 @@ pnpm workspace monorepo using TypeScript. Contains the **Pulse** app — an AI C
 - `lib/db/` — Drizzle ORM schema (conversations + messages tables)
 - `lib/integrations-anthropic-ai/` — Anthropic SDK client wrapper
 
+## Supabase Integration
+
+- **Auth**: Supabase Auth (email/password, Google OAuth, password reset)
+- **Client**: `artifacts/pulse/src/lib/supabase.ts` — browser client (anon key)
+- **Admin**: `artifacts/api-server/src/lib/supabase.ts` — server admin client (service role key)
+- **Auth context**: `artifacts/pulse/src/contexts/AuthContext.tsx` — session state + auto token injection
+- **Route guard**: `artifacts/pulse/src/components/ProtectedRoute.tsx` — redirects unauthenticated users to `/`
+- **API middleware**: `artifacts/api-server/src/middlewares/auth.ts` — verifies Supabase JWT on all `/api/anthropic` routes
+
 ## Environment Variables (auto-set)
 
 - `DATABASE_URL` — PostgreSQL connection string
 - `AI_INTEGRATIONS_ANTHROPIC_BASE_URL` — Replit AI proxy URL
 - `AI_INTEGRATIONS_ANTHROPIC_API_KEY` — Replit AI proxy key (dummy string)
+- `SUPABASE_URL` / `VITE_SUPABASE_URL` — Supabase project URL
+- `SUPABASE_ANON_KEY` — Public anon key (injected into Vite frontend via `define`)
+- `SUPABASE_SERVICE_ROLE_KEY` — Server-side admin key (API server only)
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.

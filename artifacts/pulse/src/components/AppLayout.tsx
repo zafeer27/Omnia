@@ -1,7 +1,8 @@
 import { Link, useLocation } from "wouter";
-import { Activity, LayoutDashboard, MessageSquare, PieChart, Puzzle, Settings, ListTodo, Bell, Globe, Users, Mail, Target, TrendingUp, Heart, Sun, Moon } from "lucide-react";
+import { Activity, LayoutDashboard, MessageSquare, PieChart, Puzzle, Settings, ListTodo, Bell, Globe, Users, Mail, Target, TrendingUp, Heart, Sun, Moon, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 type NavItem = { name: string; href: string; icon: React.ElementType };
 type NavSection = { label: string; items: NavItem[] };
@@ -50,6 +51,13 @@ const NAV_SECTIONS: NavSection[] = [
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const { user, signOut } = useAuth();
+
+  const displayEmail = user?.email ?? "founder@company.com";
+  const displayName = user?.user_metadata?.full_name as string | undefined;
+  const initials = displayName
+    ? displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+    : displayEmail.charAt(0).toUpperCase();
 
   return (
     <div className="flex h-[100dvh] w-full overflow-hidden bg-background text-foreground">
@@ -133,19 +141,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
           {/* User */}
           <Link href="/settings">
-            <div
-              className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all cursor-pointer text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
-            >
+            <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all cursor-pointer text-muted-foreground hover:text-foreground hover:bg-sidebar-accent">
               <div className="h-7 w-7 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm">
-                F
+                {initials}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-semibold text-foreground">Founder</div>
-                <div className="text-[11px] truncate">founder@company.com</div>
+                <div className="text-[13px] font-semibold text-foreground truncate">
+                  {displayName ?? displayEmail.split("@")[0]}
+                </div>
+                <div className="text-[11px] truncate">{displayEmail}</div>
               </div>
               <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" title="Active" />
             </div>
           </Link>
+
+          {/* Sign out */}
+          <button
+            onClick={signOut}
+            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium text-muted-foreground hover:text-red-400 hover:bg-red-500/5 transition-all"
+          >
+            <LogOut className="h-[15px] w-[15px] shrink-0" />
+            <span>Sign out</span>
+          </button>
         </div>
       </aside>
 

@@ -5,45 +5,76 @@ import { Eye, EyeOff, Loader2, ShieldCheck, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/lib/supabase";
+
+type Mode = "signin" | "signup";
 
 export default function Login() {
   const [, navigate] = useLocation();
+  const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const handleLogin = async (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!email || !password) {
-      setError("Please enter your work email and password.");
+      setError("Please enter your email and password.");
       return;
     }
     setError("");
+    setSuccess("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 2000));
-    navigate("/dashboard");
+
+    if (mode === "signin") {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setLoading(false);
+        setError(error.message);
+        return;
+      }
+      navigate("/dashboard");
+    } else {
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) {
+        setLoading(false);
+        setError(error.message);
+        return;
+      }
+      if (data.session) {
+        navigate("/dashboard");
+      } else {
+        setLoading(false);
+        setSuccess("Check your email to confirm your account, then sign in.");
+        setMode("signin");
+      }
+    }
   };
 
   const handleSSO = async () => {
     setError("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 2000));
-    navigate("/dashboard");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin + "/dashboard" },
+    });
+    if (error) {
+      setLoading(false);
+      setError(error.message);
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] flex overflow-hidden">
       {/* Left Panel — Branding */}
       <div className="hidden lg:flex lg:w-[52%] relative flex-col justify-between p-12 overflow-hidden">
-        {/* Gradient mesh background */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#0d0d1a] via-[#0f0f1f] to-[#0a0a0f]" />
         <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-blue-600/10 blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-purple-600/10 blur-[100px]" />
         <div className="absolute top-[40%] left-[30%] w-[300px] h-[300px] rounded-full bg-indigo-500/8 blur-[80px]" />
-
-        {/* Grid lines */}
         <div
           className="absolute inset-0 opacity-[0.035]"
           style={{
@@ -53,7 +84,6 @@ export default function Login() {
           }}
         />
 
-        {/* Logo */}
         <div className="relative z-10 flex items-center gap-3">
           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
             <Zap className="h-5 w-5 text-white" />
@@ -61,7 +91,6 @@ export default function Login() {
           <span className="text-white font-bold text-xl tracking-tight">Omnia</span>
         </div>
 
-        {/* Hero text */}
         <div className="relative z-10 space-y-8">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -85,7 +114,6 @@ export default function Login() {
             </p>
           </motion.div>
 
-          {/* Stats */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -104,7 +132,6 @@ export default function Login() {
             ))}
           </motion.div>
 
-          {/* Testimonial */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -127,7 +154,6 @@ export default function Login() {
           </motion.div>
         </div>
 
-        {/* Bottom badges */}
         <div className="relative z-10 flex items-center gap-4">
           {[
             { icon: ShieldCheck, text: "SOC 2 Type II" },
@@ -163,8 +189,12 @@ export default function Login() {
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 blur-xl opacity-40 -z-10" />
               </div>
               <div className="space-y-2">
-                <p className="text-white font-semibold text-lg tracking-tight">Authenticating securely...</p>
-                <p className="text-slate-500 text-sm">Verifying your credentials with enterprise-grade encryption</p>
+                <p className="text-white font-semibold text-lg tracking-tight">
+                  {mode === "signin" ? "Authenticating securely..." : "Creating your account..."}
+                </p>
+                <p className="text-slate-500 text-sm">
+                  Verifying your credentials with enterprise-grade encryption
+                </p>
               </div>
               <div className="flex gap-1.5">
                 {[0, 1, 2].map((i) => (
@@ -186,7 +216,6 @@ export default function Login() {
               transition={{ duration: 0.4, ease: "easeOut" }}
               className="relative z-10 w-full max-w-[400px] space-y-8"
             >
-              {/* Mobile logo */}
               <div className="flex lg:hidden items-center gap-3 mb-2">
                 <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                   <Zap className="h-4 w-4 text-white" />
@@ -194,13 +223,17 @@ export default function Login() {
                 <span className="text-white font-bold text-lg">Omnia</span>
               </div>
 
-              {/* Header */}
               <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-white tracking-tight">Welcome back</h2>
-                <p className="text-slate-400 text-sm">Sign in to your workspace to continue</p>
+                <h2 className="text-2xl font-bold text-white tracking-tight">
+                  {mode === "signin" ? "Welcome back" : "Create your account"}
+                </h2>
+                <p className="text-slate-400 text-sm">
+                  {mode === "signin"
+                    ? "Sign in to your workspace to continue"
+                    : "Start your AI Chief of Staff journey"}
+                </p>
               </div>
 
-              {/* SSO Button */}
               <Button
                 type="button"
                 onClick={handleSSO}
@@ -213,18 +246,16 @@ export default function Login() {
                   <rect x="2" y="13" width="9" height="9" rx="1.5" fill="#FBBC05" />
                   <rect x="13" y="13" width="9" height="9" rx="1.5" fill="#EA4335" />
                 </svg>
-                Continue with Single Sign-On (SSO)
+                Continue with Google
               </Button>
 
-              {/* Divider */}
               <div className="flex items-center gap-4">
                 <div className="flex-1 h-px bg-white/[0.07]" />
                 <span className="text-slate-600 text-xs font-medium tracking-wide">or sign in with email</span>
                 <div className="flex-1 h-px bg-white/[0.07]" />
               </div>
 
-              {/* Email / Password form */}
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-slate-300 text-sm font-medium">
                     Work Email
@@ -245,12 +276,20 @@ export default function Login() {
                     <Label htmlFor="password" className="text-slate-300 text-sm font-medium">
                       Password
                     </Label>
-                    <button
-                      type="button"
-                      className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium"
-                    >
-                      Forgot password?
-                    </button>
+                    {mode === "signin" && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!email) { setError("Enter your email first."); return; }
+                          const { error } = await supabase.auth.resetPasswordForEmail(email);
+                          if (error) setError(error.message);
+                          else setSuccess("Password reset email sent — check your inbox.");
+                        }}
+                        className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium"
+                      >
+                        Forgot password?
+                      </button>
+                    )}
                   </div>
                   <div className="relative">
                     <Input
@@ -260,7 +299,7 @@ export default function Login() {
                       value={password}
                       onChange={(e) => { setPassword(e.target.value); setError(""); }}
                       className="h-11 bg-white/[0.05] border-white/[0.10] text-white placeholder:text-slate-600 rounded-xl focus-visible:ring-blue-500/50 focus-visible:border-blue-500/50 focus-visible:bg-white/[0.07] transition-all pr-11"
-                      autoComplete="current-password"
+                      autoComplete={mode === "signin" ? "current-password" : "new-password"}
                     />
                     <button
                       type="button"
@@ -273,7 +312,6 @@ export default function Login() {
                   </div>
                 </div>
 
-                {/* Error */}
                 <AnimatePresence>
                   {error && (
                     <motion.p
@@ -285,23 +323,51 @@ export default function Login() {
                       {error}
                     </motion.p>
                   )}
+                  {success && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      className="text-emerald-400 text-xs font-medium px-1"
+                    >
+                      {success}
+                    </motion.p>
+                  )}
                 </AnimatePresence>
 
                 <Button
                   type="submit"
                   className="w-full h-11 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-200 text-sm tracking-wide"
                 >
-                  Sign In to Omnia
+                  {mode === "signin" ? "Sign In to Omnia" : "Create Account"}
                 </Button>
               </form>
 
-              {/* Footer */}
               <div className="space-y-4">
                 <p className="text-center text-slate-600 text-xs">
-                  Don't have an account?{" "}
-                  <a href="/onboarding" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
-                    Request access
-                  </a>
+                  {mode === "signin" ? (
+                    <>
+                      Don't have an account?{" "}
+                      <button
+                        type="button"
+                        onClick={() => { setMode("signup"); setError(""); setSuccess(""); }}
+                        className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                      >
+                        Create one
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      Already have an account?{" "}
+                      <button
+                        type="button"
+                        onClick={() => { setMode("signin"); setError(""); setSuccess(""); }}
+                        className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                      >
+                        Sign in
+                      </button>
+                    </>
+                  )}
                 </p>
                 <div className="flex items-center justify-center gap-1.5 text-slate-700 text-xs">
                   <ShieldCheck className="h-3 w-3" />

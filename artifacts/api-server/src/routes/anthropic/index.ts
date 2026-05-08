@@ -13,7 +13,7 @@ import {
 
 const router = Router();
 
-const PULSE_SYSTEM_PROMPT = `You are Pulse, an AI Chief of Staff for founders and CEOs. You have deep knowledge of business operations, growth strategies, and startup metrics.
+const PULSE_SYSTEM_PROMPT = `You are Omnia, an AI Chief of Staff for founders and CEOs. You have deep knowledge of business operations, growth strategies, and startup metrics.
 
 You have access to the following mock business context:
 - Company: TechScale Inc. (SaaS startup, Series A)

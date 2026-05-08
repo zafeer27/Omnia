@@ -2,6 +2,7 @@ import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/Login";
 import Landing from "@/pages/Landing";
@@ -35,19 +36,45 @@ function Router() {
       <Route path="/" component={Login} />
       <Route path="/home" component={Landing} />
       <Route path="/onboarding" component={Onboarding} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/chat" component={Chat} />
-      <Route path="/reports" component={Reports} />
-      <Route path="/integrations" component={Integrations} />
-      <Route path="/settings" component={Settings} />
-      <Route path="/actions" component={Actions} />
-      <Route path="/alerts" component={Alerts} />
-      <Route path="/competitors" component={Competitors} />
-      <Route path="/team" component={Team} />
-      <Route path="/investor-updates" component={InvestorUpdates} />
-      <Route path="/goals" component={Goals} />
-      <Route path="/forecast" component={Forecast} />
-      <Route path="/customers" component={Customers} />
+      <Route path="/dashboard">
+        <ProtectedRoute><Dashboard /></ProtectedRoute>
+      </Route>
+      <Route path="/chat">
+        <ProtectedRoute><Chat /></ProtectedRoute>
+      </Route>
+      <Route path="/reports">
+        <ProtectedRoute><Reports /></ProtectedRoute>
+      </Route>
+      <Route path="/integrations">
+        <ProtectedRoute><Integrations /></ProtectedRoute>
+      </Route>
+      <Route path="/settings">
+        <ProtectedRoute><Settings /></ProtectedRoute>
+      </Route>
+      <Route path="/actions">
+        <ProtectedRoute><Actions /></ProtectedRoute>
+      </Route>
+      <Route path="/alerts">
+        <ProtectedRoute><Alerts /></ProtectedRoute>
+      </Route>
+      <Route path="/competitors">
+        <ProtectedRoute><Competitors /></ProtectedRoute>
+      </Route>
+      <Route path="/team">
+        <ProtectedRoute><Team /></ProtectedRoute>
+      </Route>
+      <Route path="/investor-updates">
+        <ProtectedRoute><InvestorUpdates /></ProtectedRoute>
+      </Route>
+      <Route path="/goals">
+        <ProtectedRoute><Goals /></ProtectedRoute>
+      </Route>
+      <Route path="/forecast">
+        <ProtectedRoute><Forecast /></ProtectedRoute>
+      </Route>
+      <Route path="/customers">
+        <ProtectedRoute><Customers /></ProtectedRoute>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
