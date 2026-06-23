@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db, conversations as conversationsTable, messages as messagesTable } from "@workspace/db";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
 import {
@@ -36,6 +36,58 @@ async function getOwnedConversation(id: number, userId: string) {
     .from(conversationsTable)
     .where(and(eq(conversationsTable.id, id), eq(conversationsTable.userId, userId)));
   return conversation ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// Abuse controls for POST /conversations/:id/messages
+//
+// 1. Per-user rate limit  — sliding window, max RATE_LIMIT_MAX req/min
+// 2. Per-user concurrency — max MAX_CONCURRENT_PER_USER simultaneous streams
+// 3. Hard stream deadline — STREAM_TIMEOUT_MS combined with disconnect abort
+// 4. Bounded DB history  — only the most recent MAX_HISTORY_MESSAGES rows
+//    fetched from Postgres (LIMIT in SQL, not slice-in-memory)
+// ---------------------------------------------------------------------------
+
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 10;
+const MAX_CONCURRENT_PER_USER = 3;
+const STREAM_TIMEOUT_MS = 120_000; // 2-minute hard deadline per generation
+const MAX_HISTORY_MESSAGES = 20;
+
+// --- Sliding-window rate limiter ---
+const rateLimitStore = new Map<string, number[]>();
+
+function isRateLimited(userId: string): boolean {
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW_MS;
+  const timestamps = (rateLimitStore.get(userId) ?? []).filter(
+    (ts) => ts > windowStart,
+  );
+  if (timestamps.length >= RATE_LIMIT_MAX) {
+    return true;
+  }
+  timestamps.push(now);
+  rateLimitStore.set(userId, timestamps);
+  return false;
+}
+
+// --- Per-user concurrency tracker ---
+const concurrencyStore = new Map<string, number>();
+
+function acquireConcurrencySlot(userId: string): boolean {
+  const current = concurrencyStore.get(userId) ?? 0;
+  if (current >= MAX_CONCURRENT_PER_USER) return false;
+  concurrencyStore.set(userId, current + 1);
+  return true;
+}
+
+function releaseConcurrencySlot(userId: string): void {
+  const current = concurrencyStore.get(userId) ?? 0;
+  if (current <= 1) {
+    concurrencyStore.delete(userId);
+  } else {
+    concurrencyStore.set(userId, current - 1);
+  }
 }
 
 router.get("/conversations", async (req, res) => {
@@ -145,8 +197,25 @@ router.get("/conversations/:id/messages", async (req, res) => {
   }
 });
 
-router.post("/conversations/:id/messages", async (req, res) => {
-  const { userId } = req as AuthRequest;
+router.post("/conversations/:id/messages", async (req: AuthRequest, res) => {
+  const userId = req.userId ?? "anonymous";
+
+  // --- Check 1: per-user rate limit ---
+  if (isRateLimited(userId)) {
+    res
+      .status(429)
+      .json({ error: "Too many requests. Please wait before sending another message." });
+    return;
+  }
+
+  // --- Check 2: per-user concurrency cap ---
+  if (!acquireConcurrencySlot(userId)) {
+    res
+      .status(429)
+      .json({ error: "Too many concurrent requests. Please wait for an active response to finish." });
+    return;
+  }
+
   try {
     const paramsParsed = SendAnthropicMessageParams.safeParse({ id: Number(req.params.id) });
     if (!paramsParsed.success) {
@@ -162,7 +231,8 @@ router.post("/conversations/:id/messages", async (req, res) => {
     const conversationId = paramsParsed.data.id;
     const userContent = bodyParsed.data.content;
 
-    const conversation = await getOwnedConversation(conversationId, userId!);
+    // Ownership check: ensures the conversation belongs to the authenticated user
+    const conversation = await getOwnedConversation(conversationId, userId);
     if (!conversation) {
       res.status(404).json({ error: "Conversation not found" });
       return;
@@ -174,13 +244,16 @@ router.post("/conversations/:id/messages", async (req, res) => {
       content: userContent,
     });
 
-    const allMessages = await db
+    // --- Check 4: bounded DB fetch — only the most recent N rows ---
+    const recentMessages = await db
       .select()
       .from(messagesTable)
       .where(eq(messagesTable.conversationId, conversationId))
-      .orderBy(messagesTable.createdAt);
+      .orderBy(desc(messagesTable.createdAt))
+      .limit(MAX_HISTORY_MESSAGES);
+    recentMessages.reverse(); // restore chronological order for the API
 
-    const chatMessages = allMessages.map((m) => ({
+    const chatMessages = recentMessages.map((m) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
     }));
@@ -189,25 +262,49 @@ router.post("/conversations/:id/messages", async (req, res) => {
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
 
-    let fullResponse = "";
-
-    const stream = anthropic.messages.stream({
-      model: "claude-sonnet-4-6",
-      max_tokens: 8192,
-      system: PULSE_SYSTEM_PROMPT,
-      messages: chatMessages,
+    // --- Check 2/3: combine disconnect abort + hard deadline into one signal ---
+    const disconnectController = new AbortController();
+    req.on("close", () => {
+      disconnectController.abort();
     });
 
-    for await (const event of stream) {
-      if (
-        event.type === "content_block_delta" &&
-        event.delta.type === "text_delta"
-      ) {
-        fullResponse += event.delta.text;
-        res.write(
-          `data: ${JSON.stringify({ type: "content_block_delta", delta: { text: event.delta.text } })}\n\n`
-        );
+    const combinedSignal = AbortSignal.any([
+      disconnectController.signal,
+      AbortSignal.timeout(STREAM_TIMEOUT_MS),
+    ]);
+
+    let fullResponse = "";
+
+    const stream = anthropic.messages.stream(
+      {
+        model: "claude-sonnet-4-6",
+        max_tokens: 8192,
+        system: PULSE_SYSTEM_PROMPT,
+        messages: chatMessages,
+      },
+      { signal: combinedSignal },
+    );
+
+    try {
+      for await (const event of stream) {
+        if (
+          event.type === "content_block_delta" &&
+          event.delta.type === "text_delta"
+        ) {
+          fullResponse += event.delta.text;
+          res.write(
+            `data: ${JSON.stringify({ type: "content_block_delta", delta: { text: event.delta.text } })}\n\n`
+          );
+        }
       }
+    } catch (streamErr) {
+      if (combinedSignal.aborted) {
+        const reason = disconnectController.signal.aborted ? "client disconnected" : "deadline exceeded";
+        req.log.info({ conversationId, reason }, "Anthropic stream cancelled");
+        res.end();
+        return;
+      }
+      throw streamErr;
     }
 
     await db.insert(messagesTable).values({
@@ -226,6 +323,8 @@ router.post("/conversations/:id/messages", async (req, res) => {
       res.write(`data: ${JSON.stringify({ error: "Stream failed" })}\n\n`);
       res.end();
     }
+  } finally {
+    releaseConcurrencySlot(userId);
   }
 });
 
