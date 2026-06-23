@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import type { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
+import { seedDemoAlertsIfNew } from "@/lib/seedDemoAlerts";
 
 interface AuthContextValue {
   user: User | null;
@@ -31,9 +32,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (event === "SIGNED_IN" && session?.user) {
+        void seedDemoAlertsIfNew(session.user.id);
+      }
     });
 
     return () => subscription.unsubscribe();
