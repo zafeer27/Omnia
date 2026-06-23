@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db, conversations as conversationsTable, messages as messagesTable } from "@workspace/db";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
 import {
@@ -10,6 +10,7 @@ import {
   SendAnthropicMessageParams,
   SendAnthropicMessageBody,
 } from "@workspace/api-zod";
+import type { AuthRequest } from "../../middlewares/auth.js";
 
 const router = Router();
 
@@ -28,11 +29,22 @@ You have access to the following mock business context:
 
 You provide concise, actionable insights. You think like a strategic advisor — direct, data-driven, and focused on what matters most. Keep responses focused and practical. Use markdown formatting for clarity.`;
 
+/** Fetch a conversation and verify it belongs to userId. Returns null if not found or not owned. */
+async function getOwnedConversation(id: number, userId: string) {
+  const [conversation] = await db
+    .select()
+    .from(conversationsTable)
+    .where(and(eq(conversationsTable.id, id), eq(conversationsTable.userId, userId)));
+  return conversation ?? null;
+}
+
 router.get("/conversations", async (req, res) => {
+  const { userId } = req as AuthRequest;
   try {
     const conversations = await db
       .select()
       .from(conversationsTable)
+      .where(eq(conversationsTable.userId, userId!))
       .orderBy(conversationsTable.createdAt);
     res.json(conversations);
   } catch (err) {
@@ -42,6 +54,7 @@ router.get("/conversations", async (req, res) => {
 });
 
 router.post("/conversations", async (req, res) => {
+  const { userId } = req as AuthRequest;
   try {
     const parsed = CreateAnthropicConversationBody.safeParse(req.body);
     if (!parsed.success) {
@@ -50,7 +63,7 @@ router.post("/conversations", async (req, res) => {
     }
     const [conversation] = await db
       .insert(conversationsTable)
-      .values({ title: parsed.data.title })
+      .values({ title: parsed.data.title, userId: userId! })
       .returning();
     res.status(201).json(conversation);
   } catch (err) {
@@ -60,16 +73,14 @@ router.post("/conversations", async (req, res) => {
 });
 
 router.get("/conversations/:id", async (req, res) => {
+  const { userId } = req as AuthRequest;
   try {
     const parsed = GetAnthropicConversationParams.safeParse({ id: Number(req.params.id) });
     if (!parsed.success) {
       res.status(400).json({ error: "Invalid id" });
       return;
     }
-    const [conversation] = await db
-      .select()
-      .from(conversationsTable)
-      .where(eq(conversationsTable.id, parsed.data.id));
+    const conversation = await getOwnedConversation(parsed.data.id, userId!);
     if (!conversation) {
       res.status(404).json({ error: "Conversation not found" });
       return;
@@ -87,6 +98,7 @@ router.get("/conversations/:id", async (req, res) => {
 });
 
 router.delete("/conversations/:id", async (req, res) => {
+  const { userId } = req as AuthRequest;
   try {
     const parsed = DeleteAnthropicConversationParams.safeParse({ id: Number(req.params.id) });
     if (!parsed.success) {
@@ -95,7 +107,7 @@ router.delete("/conversations/:id", async (req, res) => {
     }
     const [deleted] = await db
       .delete(conversationsTable)
-      .where(eq(conversationsTable.id, parsed.data.id))
+      .where(and(eq(conversationsTable.id, parsed.data.id), eq(conversationsTable.userId, userId!)))
       .returning();
     if (!deleted) {
       res.status(404).json({ error: "Conversation not found" });
@@ -109,10 +121,16 @@ router.delete("/conversations/:id", async (req, res) => {
 });
 
 router.get("/conversations/:id/messages", async (req, res) => {
+  const { userId } = req as AuthRequest;
   try {
     const parsed = ListAnthropicMessagesParams.safeParse({ id: Number(req.params.id) });
     if (!parsed.success) {
       res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    const conversation = await getOwnedConversation(parsed.data.id, userId!);
+    if (!conversation) {
+      res.status(404).json({ error: "Conversation not found" });
       return;
     }
     const messages = await db
@@ -128,6 +146,7 @@ router.get("/conversations/:id/messages", async (req, res) => {
 });
 
 router.post("/conversations/:id/messages", async (req, res) => {
+  const { userId } = req as AuthRequest;
   try {
     const paramsParsed = SendAnthropicMessageParams.safeParse({ id: Number(req.params.id) });
     if (!paramsParsed.success) {
@@ -143,10 +162,7 @@ router.post("/conversations/:id/messages", async (req, res) => {
     const conversationId = paramsParsed.data.id;
     const userContent = bodyParsed.data.content;
 
-    const [conversation] = await db
-      .select()
-      .from(conversationsTable)
-      .where(eq(conversationsTable.id, conversationId));
+    const conversation = await getOwnedConversation(conversationId, userId!);
     if (!conversation) {
       res.status(404).json({ error: "Conversation not found" });
       return;
