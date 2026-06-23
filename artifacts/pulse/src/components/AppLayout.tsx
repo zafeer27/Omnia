@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Activity, LayoutDashboard, MessageSquare, PieChart, Puzzle, Settings, ListTodo, Bell, Globe, Users, Mail, Target, TrendingUp, Heart, Sun, Moon, LogOut } from "lucide-react";
+import { Activity, LayoutDashboard, MessageSquare, PieChart, Puzzle, Settings, ListTodo, Bell, Globe, Users, Mail, Target, TrendingUp, Heart, Sun, Moon, LogOut, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,6 +43,7 @@ const NAV_SECTIONS: NavSection[] = [
     label: "Settings",
     items: [
       { name: "Integrations", href: "/integrations", icon: Puzzle },
+      { name: "Billing", href: "/billing", icon: CreditCard },
       { name: "Settings", href: "/settings", icon: Settings },
     ],
   },

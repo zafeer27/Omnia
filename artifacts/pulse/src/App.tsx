@@ -20,6 +20,7 @@ import InvestorUpdates from "@/pages/InvestorUpdates";
 import Goals from "@/pages/Goals";
 import Forecast from "@/pages/Forecast";
 import Customers from "@/pages/Customers";
+import Billing from "@/pages/Billing";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -74,6 +75,9 @@ function Router() {
       </Route>
       <Route path="/customers">
         <ProtectedRoute><Customers /></ProtectedRoute>
+      </Route>
+      <Route path="/billing">
+        <ProtectedRoute><Billing /></ProtectedRoute>
       </Route>
       <Route component={NotFound} />
     </Switch>
