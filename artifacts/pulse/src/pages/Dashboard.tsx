@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -7,6 +7,8 @@ import { AlertTriangle, TrendingUp, Users, ArrowUpRight, ArrowDownRight, Refresh
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import ReactMarkdown from "react-markdown";
 import { useCreateAnthropicConversation } from "@workspace/api-client-react";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 
 const WEEKLY_REPORT_PROMPT = `You are Omnia, an AI Chief of Staff for founders. Generate a concise Weekly Executive Summary based on:
 
@@ -34,12 +36,6 @@ const acquisitionData = [
   { channel: "Paid", pct: 12 },
 ];
 
-const riskCustomers = [
-  { name: "Pinnacle Corp", arr: "$12K", issue: "45 days inactive" },
-  { name: "TechFlow", arr: "$8K", issue: "Usage −60%" },
-  { name: "BuildRight", arr: "$6K", issue: "3 failed payments" },
-];
-
 const KPI_CARDS = [
   { label: "MRR", value: "$284K", change: "+12.4%", suffix: "vs last month", up: true, icon: TrendingUp },
   { label: "Customers", value: "1,847", change: "+8.2%", suffix: "vs last month", up: true, icon: Users },
@@ -47,11 +43,45 @@ const KPI_CARDS = [
   { label: "LTV : CAC", value: "16.8×", change: "+15%", suffix: "vs last month", up: true, icon: TrendingUp },
 ];
 
+type RiskAlert = {
+  id: string | number;
+  title: string;
+  metric: string;
+  change: string;
+};
+
 export default function Dashboard() {
+  const { user } = useAuth();
   const [reportOpen, setReportOpen] = useState(false);
   const [reportContent, setReportContent] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [riskAlerts, setRiskAlerts] = useState<RiskAlert[]>([]);
+  const [riskLoading, setRiskLoading] = useState(true);
   const createConversation = useCreateAnthropicConversation();
+
+  useEffect(() => {
+    if (!user) return;
+    setRiskLoading(true);
+    supabase
+      .from("alerts")
+      .select("id, title, metric, change")
+      .eq("user_id", user.id)
+      .eq("severity", "critical")
+      .eq("resolved", false)
+      .order("created_at", { ascending: false })
+      .limit(5)
+      .then(({ data }) => {
+        setRiskAlerts(
+          (data ?? []).map((row) => ({
+            id: row.id as string | number,
+            title: (row.title as string) ?? "",
+            metric: (row.metric as string) ?? "",
+            change: (row.change as string) ?? "",
+          }))
+        );
+        setRiskLoading(false);
+      });
+  }, [user]);
 
   const handleGenerateReport = async () => {
     setReportContent("");
@@ -222,26 +252,34 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* At Risk */}
+              {/* At Risk — live from Supabase */}
               <div className="flex-1 rounded-xl border bg-card p-5" style={{ borderColor: "hsl(var(--border))" }}>
                 <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
                   <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
                   At-Risk Accounts
                 </h3>
-                <div className="space-y-3">
-                  {riskCustomers.map((c) => (
-                    <div key={c.name} className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{c.name}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{c.issue}</p>
+                {riskLoading ? (
+                  <div className="flex items-center justify-center h-16">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                ) : riskAlerts.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-4">No critical alerts right now.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {riskAlerts.map((a) => (
+                      <div key={a.id} className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-foreground leading-snug">{a.title}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{a.metric}</p>
+                        </div>
+                        <div className="text-right shrink-0 ml-3">
+                          <p className="text-sm font-semibold text-foreground tabular-nums">{a.change}</p>
+                          <span className="text-[10px] text-red-400 font-medium">at risk</span>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-semibold text-foreground tabular-nums">{c.arr}</p>
-                        <span className="text-[10px] text-red-400 font-medium">at risk</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -268,7 +306,7 @@ export default function Dashboard() {
             {isGenerating && reportContent === "" ? (
               <div className="flex flex-col items-center justify-center h-40 gap-3 text-muted-foreground">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                <p className="text-sm">Analysing your metrics...</p>
+                <p className="text-sm">Analysing your metrics…</p>
               </div>
             ) : (
               <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-4 [&_h2]:mb-2 [&_strong]:font-semibold [&_ul]:my-2 [&_li]:my-0.5">
