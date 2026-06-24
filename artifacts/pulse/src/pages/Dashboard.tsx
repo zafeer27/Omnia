@@ -6,21 +6,44 @@ import { motion } from "framer-motion";
 import { AlertTriangle, TrendingUp, Users, ArrowUpRight, ArrowDownRight, RefreshCcw, Sparkles, Loader2, Download } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import ReactMarkdown from "react-markdown";
-import { useCreateAnthropicConversation } from "@workspace/api-client-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
-const WEEKLY_REPORT_PROMPT = `You are Omnia, an AI Chief of Staff for founders. Generate a concise Weekly Executive Summary based on:
+const MOCK_REPORT = `## Executive Summary
 
-**Metrics (week ending May 2, 2026):**
-- MRR: $284K (+12.4% MoM)
-- Active Customers: 1,847 (+8.2% MoM)
-- Churn Rate: 3.2% (-0.5% MoM improvement)
-- LTV:CAC Ratio: 16.8x (+15% MoM)
-- Top acquisition: LinkedIn (38%), Organic (28%), Referrals (22%), Paid (12%)
-- At-risk: Pinnacle Corp ($12K ARR, 45 days inactive), TechFlow ($8K ARR, usage -60%), BuildRight ($6K ARR, 3 failed payments)
+Strong momentum continues into Q2 2026. MRR reached **$284K** this week — a **+12.4% month-over-month** increase — driven primarily by LinkedIn and organic acquisition. Customer count grew to **1,847 active accounts** (+8.2% MoM) and the LTV:CAC ratio hit a record 16.8×. While top-line metrics are healthy, three enterprise accounts now require immediate intervention before the next billing cycle.
 
-Format with: **Executive Summary**, **Revenue Highlights**, **Customer Health**, **Top Priorities This Week** (3 action items), **Risks to Watch**. Be specific and under 400 words.`;
+## Revenue Highlights
+
+- **MRR:** $284K — up $31K from last month, tracking ahead of the $300K quarterly target
+- **LTV:CAC Ratio:** 16.8× (+15% MoM) — capital efficiency at a record high
+- **Expansion MRR:** +$18K from Acme Corp's 200-seat upgrade completed this cycle
+- **Churn rate:** 3.2% — improved 0.5pp MoM, but a 0.8pp spike in the trailing 7 days requires monitoring
+
+## Customer Health
+
+Three enterprise accounts show elevated churn signals:
+
+| Account | ARR | Risk Signal |
+|---|---|---|
+| **Pinnacle Corp** | $12K | 45 days with zero active sessions |
+| **TechFlow** | $8K | Usage dropped 60% over 14 days |
+| **BuildRight** | $6K | 3 consecutive failed Stripe payments |
+
+Combined exposure: **$26K ARR** (9.2% of MRR). Intervention required before next billing cycle.
+
+## Top Priorities This Week
+
+1. **Trigger At-Risk Recovery Playbook** for Pinnacle Corp and TechFlow — assign CSM outreach within 24 hours
+2. **Resolve BuildRight payment failure** — contact finance contact directly; Stripe retry scheduled in 24 hours
+3. **Pause new paid acquisition spend** until churn trend reverses — reallocate budget to retention programs
+
+## Risks to Watch
+
+- **Churn acceleration:** 0.8pp spike in 7 days could compound — monitor daily through month-end
+- **LinkedIn CAC rising 18%** over 2 weeks — evaluate bid strategy and creative refresh before next spend cycle
+- **Engineering capacity:** Two senior engineers flagged bandwidth constraints that may delay Q3 roadmap commitments
+`;
 
 const revenueData = Array.from({ length: 30 }).map((_, i) => {
   const base = 220000;
@@ -57,8 +80,6 @@ export default function Dashboard() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [riskAlerts, setRiskAlerts] = useState<RiskAlert[]>([]);
   const [riskLoading, setRiskLoading] = useState(true);
-  const createConversation = useCreateAnthropicConversation();
-
   useEffect(() => {
     if (!user) return;
     setRiskLoading(true);
@@ -83,36 +104,14 @@ export default function Dashboard() {
       });
   }, [user]);
 
-  const handleGenerateReport = async () => {
+  const handleGenerateReport = () => {
     setReportContent("");
     setReportOpen(true);
     setIsGenerating(true);
-    try {
-      const conv = await new Promise<{ id: number }>((resolve, reject) => {
-        createConversation.mutate({ data: { title: "Weekly Report" } }, { onSuccess: resolve, onError: reject });
-      });
-      const response = await fetch(
-        `${import.meta.env.BASE_URL}api/anthropic/conversations/${conv.id}/messages`,
-        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: WEEKLY_REPORT_PROMPT }) }
-      );
-      if (!response.body) throw new Error("No response body");
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let full = "";
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        for (const line of decoder.decode(value, { stream: true }).split("\n")) {
-          if (line.startsWith("data: ")) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              if (data.type === "content_block_delta" && data.delta?.text) { full += data.delta.text; setReportContent(full); }
-            } catch {}
-          }
-        }
-      }
-    } catch { setReportContent("Sorry, there was an error generating the report. Please try again."); }
-    finally { setIsGenerating(false); }
+    setTimeout(() => {
+      setReportContent(MOCK_REPORT);
+      setIsGenerating(false);
+    }, 2500);
   };
 
   return (

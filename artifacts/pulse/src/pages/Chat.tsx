@@ -5,13 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Activity, Send, Bot, User, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
-import { useCreateAnthropicConversation } from "@workspace/api-client-react";
 
 type Message = {
   id: string;
   role: "user" | "assistant";
   content: string;
 };
+
+const MOCK_RESPONSE =
+  "I have analyzed your metrics. TechFlow and Pinnacle Corp are currently showing high churn signals due to a 60% drop in usage. I recommend triggering the **At-Risk Recovery Playbook** for these accounts immediately.";
 
 const SUGGESTED_PROMPTS = [
   "Why did revenue drop last week?",
@@ -23,32 +25,16 @@ const SUGGESTED_PROMPTS = [
 export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [conversationId, setConversationId] = useState<number | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const createConversation = useCreateAnthropicConversation();
-
-  useEffect(() => {
-    // Create a new conversation on mount
-    createConversation.mutate(
-      { data: { title: "New Conversation" } },
-      {
-        onSuccess: (data) => {
-          setConversationId(data.id);
-        },
-      }
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     // Scroll to bottom when messages change
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isStreaming]);
 
-  const handleSend = async (text: string) => {
-    if (!text.trim() || !conversationId || isStreaming) return;
+  const handleSend = (text: string) => {
+    if (!text.trim() || isStreaming) return;
 
     const userMessage: Message = { id: Date.now().toString(), role: "user", content: text };
     setMessages((prev) => [...prev, userMessage]);
@@ -58,60 +44,20 @@ export default function Chat() {
     const assistantMessageId = (Date.now() + 1).toString();
     setMessages((prev) => [...prev, { id: assistantMessageId, role: "assistant", content: "" }]);
 
-    try {
-      const response = await fetch(`${import.meta.env.BASE_URL}api/anthropic/conversations/${conversationId}/messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: text }),
-      });
-
-      if (!response.body) throw new Error("No response body");
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const dataStr = line.slice(6);
-            if (dataStr === '[DONE]') continue;
-            try {
-              const data = JSON.parse(dataStr);
-              if (data.type === 'content_block_delta' && data.delta?.text) {
-                setMessages((prev) => prev.map((msg) => 
-                  msg.id === assistantMessageId 
-                    ? { ...msg, content: msg.content + data.delta.text } 
-                    : msg
-                ));
-              }
-            } catch (e) {
-              console.error("Error parsing SSE data", e);
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Failed to send message", error);
-      setMessages((prev) => prev.map((msg) => 
-        msg.id === assistantMessageId 
-          ? { ...msg, content: "Sorry, I encountered an error processing your request." } 
-          : msg
-      ));
-    } finally {
+    setTimeout(() => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId ? { ...msg, content: MOCK_RESPONSE } : msg
+        )
+      );
       setIsStreaming(false);
-    }
+    }, 2000);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend(input);
+      void handleSend(input);
     }
   };
 
@@ -235,13 +181,13 @@ export default function Chat() {
               onKeyDown={handleKeyDown}
               placeholder={isStreaming ? "Omnia is thinking..." : "Ask anything about your business..."}
               className="pr-12 py-6 rounded-xl bg-card border-border shadow-sm focus-visible:ring-primary/50 text-base"
-              disabled={isStreaming || !conversationId}
+              disabled={isStreaming}
             />
             <Button
               data-testid="button-send-chat"
               size="icon"
               className="absolute right-2 bottom-2 h-8 w-8 rounded-lg"
-              disabled={!input.trim() || isStreaming || !conversationId}
+              disabled={!input.trim() || isStreaming}
               onClick={() => handleSend(input)}
             >
               {isStreaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
