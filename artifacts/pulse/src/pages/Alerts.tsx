@@ -204,10 +204,27 @@ export default function Alerts() {
                 })}
               </AnimatePresence>
               {displayed.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Bell className="h-8 w-8 mx-auto mb-3 opacity-30" />
-                  <p className="text-sm">No alerts match this filter</p>
-                </div>
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex flex-col items-center justify-center py-16 gap-4 text-center"
+                >
+                  <div className="relative">
+                    <div className="absolute inset-0 rounded-2xl blur-xl opacity-20"
+                      style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary)/0.5))", transform: "scale(1.5)" }} />
+                    <div className="relative h-14 w-14 rounded-2xl flex items-center justify-center border"
+                      style={{ background: "hsl(var(--muted))", borderColor: "hsl(var(--border))" }}>
+                      <Bell className="h-6 w-6 text-muted-foreground/50" />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5 max-w-xs">
+                    <p className="text-sm font-medium text-foreground">All clear</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Monitoring active streams. Anomalies and reports will generate here automatically.
+                    </p>
+                  </div>
+                </motion.div>
               )}
             </div>
           )}

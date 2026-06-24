@@ -3,9 +3,10 @@ import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
-import { AlertTriangle, TrendingUp, Users, ArrowUpRight, ArrowDownRight, RefreshCcw, Sparkles, Loader2, Download } from "lucide-react";
+import { AlertTriangle, TrendingUp, Users, ArrowUpRight, ArrowDownRight, RefreshCcw, Sparkles, Loader2, Download, Activity } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import ReactMarkdown from "react-markdown";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -108,6 +109,10 @@ export default function Dashboard() {
     setReportContent("");
     setReportOpen(true);
     setIsGenerating(true);
+    toast("Compiling executive metrics...", {
+      description: "Your Weekly Executive Summary is being prepared.",
+      duration: 2500,
+    });
     setTimeout(() => {
       setReportContent(MOCK_REPORT);
       setIsGenerating(false);
@@ -262,7 +267,15 @@ export default function Dashboard() {
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                   </div>
                 ) : riskAlerts.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-4">No critical alerts right now.</p>
+                  <div className="flex flex-col items-center justify-center py-5 gap-2.5 text-center">
+                    <div className="h-9 w-9 rounded-xl flex items-center justify-center"
+                      style={{ background: "hsl(var(--muted))" }}>
+                      <Activity className="h-4 w-4 text-muted-foreground/60" />
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed max-w-[160px]">
+                      Monitoring active streams. Anomalies and reports will generate here automatically.
+                    </p>
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     {riskAlerts.map((a) => (
