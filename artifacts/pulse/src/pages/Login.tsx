@@ -5,12 +5,13 @@ import { Eye, EyeOff, Loader2, ShieldCheck, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Mode = "signin" | "signup";
 
 export default function Login() {
   const [, navigate] = useLocation();
+  const { setDemoUser } = useAuth();
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,42 +30,11 @@ export default function Login() {
     setSuccess("");
     setLoading(true);
 
-    if (mode === "signin") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        setLoading(false);
-        setError(error.message);
-        return;
-      }
+    setTimeout(() => {
+      setDemoUser();
       navigate("/dashboard");
-    } else {
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) {
-        setLoading(false);
-        setError(error.message);
-        return;
-      }
-      if (data.session) {
-        navigate("/dashboard");
-      } else {
-        setLoading(false);
-        setSuccess("Check your email to confirm your account, then sign in.");
-        setMode("signin");
-      }
-    }
-  };
-
-  const handleSSO = async () => {
-    setError("");
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin + "/dashboard" },
-    });
-    if (error) {
       setLoading(false);
-      setError(error.message);
-    }
+    }, 800);
   };
 
   return (
@@ -234,25 +204,8 @@ export default function Login() {
                 </p>
               </div>
 
-              <Button
-                type="button"
-                onClick={handleSSO}
-                className="w-full h-11 bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.10] hover:border-white/20 text-white font-medium rounded-xl transition-all duration-200 gap-3 text-sm"
-                variant="ghost"
-              >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-                  <rect x="2" y="2" width="9" height="9" rx="1.5" fill="#4285F4" />
-                  <rect x="13" y="2" width="9" height="9" rx="1.5" fill="#34A853" />
-                  <rect x="2" y="13" width="9" height="9" rx="1.5" fill="#FBBC05" />
-                  <rect x="13" y="13" width="9" height="9" rx="1.5" fill="#EA4335" />
-                </svg>
-                Continue with Google
-              </Button>
-
-              <div className="flex items-center gap-4">
-                <div className="flex-1 h-px bg-white/[0.07]" />
-                <span className="text-slate-600 text-xs font-medium tracking-wide">or sign in with email</span>
-                <div className="flex-1 h-px bg-white/[0.07]" />
+              <div className="space-y-2">
+                <p className="text-slate-400 text-sm text-center">Sign in with email and password</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
