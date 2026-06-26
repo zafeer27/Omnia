@@ -1,5 +1,6 @@
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Activity, LayoutDashboard, MessageSquare, PieChart, Puzzle, Settings, ListTodo, Bell, Globe, Users, Mail, Target, TrendingUp, Heart, Sun, Moon, LogOut, CreditCard } from "lucide-react";
+import { Activity, LayoutDashboard, MessageSquare, PieChart, Puzzle, Settings, ListTodo, Bell, Globe, Users, Mail, Target, TrendingUp, Heart, Sun, Moon, LogOut, CreditCard, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -53,6 +54,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location]);
 
   const displayEmail = user?.email ?? "founder@company.com";
   const displayName = user?.user_metadata?.full_name as string | undefined;
@@ -62,8 +68,32 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-[100dvh] w-full overflow-hidden bg-background text-foreground">
+      {/* Mobile overlay backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-[220px] flex flex-col shrink-0 overflow-y-auto border-r border-border bg-sidebar">
+      <aside
+        className={cn(
+          "flex flex-col shrink-0 overflow-y-auto border-r border-border bg-sidebar z-50",
+          "lg:static lg:translate-x-0 lg:w-[220px]",
+          "fixed top-0 left-0 h-full w-[260px] transition-transform duration-300 ease-in-out",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        {/* Mobile close button */}
+        <div className="lg:hidden absolute top-3 right-3 z-50">
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
 
         {/* Logo */}
         <div className="px-4 py-5 flex items-center gap-2.5 shrink-0">
@@ -87,6 +117,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   return (
                     <Link key={item.name} href={item.href}>
                       <div
+                        onClick={() => setSidebarOpen(false)}
                         className={cn(
                           "flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all cursor-pointer",
                           active
@@ -142,7 +173,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
           {/* User */}
           <Link href="/settings">
-            <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all cursor-pointer text-muted-foreground hover:text-foreground hover:bg-sidebar-accent">
+            <div
+              onClick={() => setSidebarOpen(false)}
+              className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all cursor-pointer text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
+            >
               <div className="h-7 w-7 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm">
                 {initials}
               </div>
@@ -169,6 +203,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
+        {/* Mobile header bar */}
+        <div className="lg:hidden flex items-center gap-3 px-4 py-3 border-b border-border bg-background/80 backdrop-blur-sm z-30 shrink-0">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 rounded-md bg-gradient-to-br from-indigo-500 via-blue-500 to-purple-600 flex items-center justify-center">
+              <Activity className="text-white h-3 w-3" />
+            </div>
+            <span className="font-semibold text-sm tracking-tight text-foreground">Omnia</span>
+          </div>
+        </div>
+
         <div className="absolute inset-0 pointer-events-none" style={{
           background: "radial-gradient(ellipse 80% 50% at 70% -10%, hsl(var(--primary)/0.05) 0%, transparent 60%)"
         }} />
