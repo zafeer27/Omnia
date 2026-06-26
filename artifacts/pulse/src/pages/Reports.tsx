@@ -4,9 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, FileText, TrendingUp, Users, BarChart2, RefreshCcw, Calendar, Loader2, Sparkles, X } from "lucide-react";
+import { Download, FileText, TrendingUp, Users, BarChart2, RefreshCcw, Calendar, Loader2, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { useCreateAnthropicConversation } from "@workspace/api-client-react";
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend
@@ -47,24 +46,41 @@ const INITIAL_REPORTS: SavedReport[] = [
   { title: "Marketing ROI Breakdown", date: "Apr 10, 2026", type: "Custom", icon: BarChart2 },
 ];
 
-const WEEKLY_REPORT_PROMPT = `You are Omnia, an AI Chief of Staff for founders. Generate a concise, insightful Weekly Executive Summary report for a B2B SaaS founder based on the following business metrics:
+const MOCK_REPORT = `## Executive Summary
 
-**Current metrics (week ending May 2, 2026):**
-- MRR: $284K (+12.4% MoM)
-- Active Customers: 1,847 (+8.2% MoM)
-- Churn Rate: 3.2% (-0.5% MoM improvement)
-- LTV:CAC Ratio: 16.8x (+15% MoM)
-- Top acquisition channels: LinkedIn (38%), Organic (28%), Referrals (22%), Paid (12%)
-- At-risk accounts: Acme Corp ($12K ARR, 45 days inactive), TechFlow ($8K ARR, usage -60%), BuildRight ($6K ARR, 3 failed payments)
+Strong momentum continues into Q2 2026. MRR reached **$284K** this week — a **+12.4% month-over-month** increase — driven primarily by LinkedIn and organic acquisition. Customer count grew to **1,847 active accounts** (+8.2% MoM) and the LTV:CAC ratio hit a record 16.8×. While top-line metrics are healthy, three enterprise accounts now require immediate intervention before the next billing cycle.
 
-Format the report with these sections:
-1. **Executive Summary** (2-3 sentences)
-2. **Revenue Highlights**
-3. **Customer Health**
-4. **Top Priorities This Week** (3 action items)
-5. **Risks to Watch**
+## Revenue Highlights
 
-Be specific, data-driven, and actionable. Keep it under 400 words.`;
+- **MRR:** $284K — up $31K from last month, tracking ahead of the $300K quarterly target
+- **LTV:CAC Ratio:** 16.8× (+15% MoM) — capital efficiency at a record high
+- **Expansion MRR:** +$18K from Acme Corp's 200-seat upgrade completed this cycle
+- **Churn rate:** 3.2% — improved 0.5pp MoM, but a 0.8pp spike in the trailing 7 days requires monitoring
+
+## Customer Health
+
+Three enterprise accounts show elevated churn signals:
+
+| Account | ARR | Risk Signal |
+|---|---|---|
+| **Pinnacle Corp** | $12K | 45 days with zero active sessions |
+| **TechFlow** | $8K | Usage dropped 60% over 14 days |
+| **BuildRight** | $6K | 3 consecutive failed Stripe payments |
+
+Combined exposure: **$26K ARR** (9.2% of MRR). Intervention required before next billing cycle.
+
+## Top Priorities This Week
+
+1. **Trigger At-Risk Recovery Playbook** for Pinnacle Corp and TechFlow — assign CSM outreach within 24 hours
+2. **Resolve BuildRight payment failure** — contact finance contact directly; Stripe retry scheduled in 24 hours
+3. **Pause new paid acquisition spend** until churn trend reverses — reallocate budget to retention programs
+
+## Risks to Watch
+
+- **Churn acceleration:** 0.8pp spike in 7 days could compound — monitor daily through month-end
+- **LinkedIn CAC rising 18%** over 2 weeks — evaluate bid strategy and creative refresh before next spend cycle
+- **Engineering capacity:** Two senior engineers flagged bandwidth constraints that may delay Q3 roadmap commitments
+`;
 
 const container = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.07 } } };
 const item = { hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } };
@@ -76,70 +92,24 @@ export default function Reports() {
   const [reportContent, setReportContent] = useState("");
   const [viewingReport, setViewingReport] = useState<SavedReport | null>(null);
 
-  const createConversation = useCreateAnthropicConversation();
-
-  const handleGenerateReport = async () => {
+  const handleGenerateReport = () => {
     setReportContent("");
     setViewingReport(null);
     setReportOpen(true);
     setIsGenerating(true);
 
-    try {
-      const conv = await new Promise<{ id: number }>((resolve, reject) => {
-        createConversation.mutate(
-          { data: { title: "Weekly Report" } },
-          { onSuccess: resolve, onError: reject }
-        );
-      });
-
-      const response = await fetch(
-        `${import.meta.env.BASE_URL}api/anthropic/conversations/${conv.id}/messages`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content: WEEKLY_REPORT_PROMPT }),
-        }
-      );
-
-      if (!response.body) throw new Error("No response body");
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let fullContent = "";
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        for (const line of chunk.split("\n")) {
-          if (line.startsWith("data: ")) {
-            const dataStr = line.slice(6);
-            if (dataStr === "[DONE]") continue;
-            try {
-              const data = JSON.parse(dataStr);
-              if (data.type === "content_block_delta" && data.delta?.text) {
-                fullContent += data.delta.text;
-                setReportContent(fullContent);
-              }
-            } catch {}
-          }
-        }
-      }
-
-      // Add to saved reports
+    setTimeout(() => {
+      setReportContent(MOCK_REPORT);
+      setIsGenerating(false);
       const newReport: SavedReport = {
         title: "Weekly Executive Summary",
         date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
         type: "Weekly",
         icon: Sparkles,
-        content: fullContent,
+        content: MOCK_REPORT,
       };
       setReports((prev) => [newReport, ...prev]);
-    } catch (err) {
-      setReportContent("Sorry, there was an error generating your report. Please try again.");
-    } finally {
-      setIsGenerating(false);
-    }
+    }, 1500);
   };
 
   const handleViewReport = (report: SavedReport) => {
