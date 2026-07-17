@@ -12,6 +12,7 @@ export const conversations = pgTable("conversations", {
 export const insertConversationSchema = createInsertSchema(conversations).omit({
   id: true,
   createdAt: true,
+  userId: true,
 });
 
 export type Conversation = typeof conversations.$inferSelect;

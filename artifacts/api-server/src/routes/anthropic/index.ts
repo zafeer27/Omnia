@@ -98,7 +98,7 @@ router.get("/conversations", async (req, res) => {
       .from(conversationsTable)
       .where(eq(conversationsTable.userId, userId!))
       .orderBy(conversationsTable.createdAt);
-    res.json(conversations);
+    res.json(conversations.map(({ userId: _uid, ...rest }) => rest));
   } catch (err) {
     req.log.error({ err }, "Failed to list conversations");
     res.status(500).json({ error: "Failed to list conversations" });
@@ -117,7 +117,8 @@ router.post("/conversations", async (req, res) => {
       .insert(conversationsTable)
       .values({ title: parsed.data.title, userId: userId! })
       .returning();
-    res.status(201).json(conversation);
+    const { userId: _uid, ...conversationResponse } = conversation;
+    res.status(201).json(conversationResponse);
   } catch (err) {
     req.log.error({ err }, "Failed to create conversation");
     res.status(500).json({ error: "Failed to create conversation" });
@@ -142,7 +143,8 @@ router.get("/conversations/:id", async (req, res) => {
       .from(messagesTable)
       .where(eq(messagesTable.conversationId, parsed.data.id))
       .orderBy(messagesTable.createdAt);
-    res.json({ ...conversation, messages });
+    const { userId: _uid, ...conversationResponse } = conversation;
+    res.json({ ...conversationResponse, messages });
   } catch (err) {
     req.log.error({ err }, "Failed to get conversation");
     res.status(500).json({ error: "Failed to get conversation" });
