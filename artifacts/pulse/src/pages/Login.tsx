@@ -1,4 +1,5 @@
-// @ts-nocheck 
+// @ts-nocheck
+
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
